@@ -1,0 +1,1 @@
+export type StatusType = "Available" | "Occupied" | "Cleaning" | "Announcement";
