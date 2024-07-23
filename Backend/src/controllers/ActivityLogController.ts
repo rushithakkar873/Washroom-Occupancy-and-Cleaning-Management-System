@@ -82,11 +82,6 @@ export class ActivityLogController {
         relations: ["user", "washroom"],
       });
 
-      if (activities.length === 0) {
-        res.status(204).json({ message: "No activity logs found" });
-        return;
-      }
-
       res.status(200).json({
         message: "Activity logs retrieved successfully",
         data: activities,
