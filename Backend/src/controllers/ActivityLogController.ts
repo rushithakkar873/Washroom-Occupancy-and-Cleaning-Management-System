@@ -83,7 +83,7 @@ export class ActivityLogController {
       });
 
       if (activities.length === 0) {
-        res.status(404).json({ message: "No activity logs found" });
+        res.status(204).json({ message: "No activity logs found" });
         return;
       }
 
