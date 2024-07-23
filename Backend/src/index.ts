@@ -3,10 +3,16 @@ import { AppDataSource } from "./data-source";
 import config from "./config";
 import Routes from "./routes";
 import bodyParser from "body-parser";
+import cors from "cors";
 
 const app: Express = express();
 const { port } = config;
 
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
