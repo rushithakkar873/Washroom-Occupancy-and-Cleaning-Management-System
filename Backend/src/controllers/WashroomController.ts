@@ -102,8 +102,15 @@ export class WashroomController {
         return;
       }
 
-      if((washroom.status === WashroomStatus.Cleaning || status === WashroomStatus.Cleaning) && !janitorEmail){
-        res.status(400).json({ message: "Invalid action! Please verify yourself." });
+      if (
+        ((washroom.status === WashroomStatus.Cleaning ||
+          status === WashroomStatus.Cleaning) &&
+          !janitorEmail) ||
+        status === WashroomStatus.Announcement
+      ) {
+        res
+          .status(400)
+          .json({ message: "Invalid action! Please verify yourself." });
       }
 
       washroom.status = status;
