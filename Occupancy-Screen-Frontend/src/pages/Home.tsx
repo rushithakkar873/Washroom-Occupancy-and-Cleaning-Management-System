@@ -1,9 +1,10 @@
 // State imports
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
+import { AxiosResponse } from "axios";
 
 // React-Icons imports
-import { BiMaleFemale, BiBlock } from "react-icons/bi";
 import { MdOutlineCleaningServices } from "react-icons/md";
 import { GrAnnounce } from "react-icons/gr";
 
@@ -18,11 +19,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
@@ -31,17 +27,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import VerifyJanitorForm from "@/components/custom/VerifyJanitorForm";
 
 // Utils imports
 import { STATUS_CONSTANT } from "@/utils/constants";
-import { StatusType } from "@/utils/types";
-
-// const washrooms = [
-//   { id: 1, name: "Washroom 1", status: "Available" },
-//   { id: 2, name: "Washroom 2", status: "Occupied" },
-//   { id: 3, name: "Washroom 3", status: "Available" },
-//   { id: 4, name: "Washroom 4", status: "Occupied" },
-// ];
+import { StatusType, WashroomType } from "@/utils/types";
+import ApiHelper from "@/utils/apiHelper";
+import { renderIconBasedOnStatus } from "@/utils/renderIconBasedOnStatus";
 
 const statusClasses = {
   Available: "bg-[#d4edbc] text-green-800",
@@ -65,45 +57,71 @@ const janitorButtonClasses = {
 };
 
 const Home = () => {
+  const { washroomId } = useParams();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isStatusUpdating, setIsStatusUpdating] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [accessId, setAccessId] = useState<string>("");
-  const [isValidated, setIsValidated] = useState<boolean>(false);
+  const [error, setError] = useState<boolean>(false);
   const [currStatus, setCurrStatus] = useState<StatusType>("Available");
+  const [washroomData, setWashroomData] = useState<WashroomType>();
+  const [isJanitorVerified, setIsJanitorVerified] = useState<boolean>(false);
 
-  const renderIconBasedOnStatus = (currStatus: StatusType) => {
-    switch (currStatus) {
-      case STATUS_CONSTANT.available:
-        return <BiMaleFemale size={500} />;
-      case STATUS_CONSTANT.occupied:
-        return <BiBlock size={500} />;
-      case STATUS_CONSTANT.cleaning:
-        return <MdOutlineCleaningServices size={500} />;
-      case STATUS_CONSTANT.announcement:
-        return <GrAnnounce size={400} />;
-      default:
-        return <></>;
+  const fetchWashroomDetail = async () => {
+    setIsLoading(true);
+    try {
+      const response = await ApiHelper.get(`/washroom-detail/${washroomId}`);
+      const { data } = (response as AxiosResponse).data;
+      setWashroomData(data);
+      setCurrStatus(data.status);
+    } catch (error) {
+      console.error("Error fetching washroom details:", error);
+      setError(true);
     }
+    setIsLoading(false);
   };
 
-  const handleOnSubmit = () => {
-    if (accessId === "") {
-      toast.error("Please enter the value");
-    } else {
-      setIsLoading(true);
-      console.log(accessId);
-      setAccessId("");
-      setTimeout(() => {
-        setIsLoading(false);
-        setIsValidated(true);
-      }, 5000);
+  const handleOnStatusChange = async (actionName: string) => {
+    setIsStatusUpdating(true);
+    try {
+      if (currStatus === STATUS_CONSTANT.cleaning && !isJanitorVerified) {
+        toast.error("Verify yourself in order to change the status");
+        setIsStatusUpdating(false);
+        return;
+      }
+      const newStatusData = {
+        status: actionName,
+        janitorEmail: localStorage.getItem("janitorEmail") ?? null,
+      };
+
+      const response = await ApiHelper.post(
+        `/update-washroom-status/${washroomId}`,
+        newStatusData
+      );
+
+      const { data } = (response as AxiosResponse).data;
+
+      setWashroomData(data);
+      setCurrStatus(actionName as StatusType);
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast.error("Error in updating status. Please try again.");
     }
+    setIsStatusUpdating(false);
   };
 
-  const handleOnActionClick = (actionName: string) => {
-    console.log(actionName);
-    setCurrStatus(actionName as StatusType);
-    setIsValidated(false);
-  };
+  useEffect(() => {
+    fetchWashroomDetail();
+  }, []);
+
+  if (isLoading)
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <Loader2 className="mr-2 h-10 w-10 animate-spin" />
+        Loading...
+      </div>
+    );
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <>
@@ -112,78 +130,63 @@ const Home = () => {
           className={`relative flex flex-col h-full rounded-lg shadow-lg p-6 ${statusClasses[currStatus]}`}
         >
           <div className="absolute right-6">
-            <Dialog>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger>
                 <Button
+                  onClick={() => setIsDialogOpen(true)}
                   className={`${janitorButtonClasses[currStatus]} py-5 border-2 hover:bg-transparent`}
                 >
                   Janitor?
                 </Button>
               </DialogTrigger>
               <DialogContent className="p-10">
-                {isValidated ? (
-                  <>
-                    <DialogHeader>
-                      <DialogTitle className="text-center">
-                        Choose an action
-                      </DialogTitle>
-                    </DialogHeader>
-                    <div className="mt-3 flex justify-center items-center gap-4">
-                      <div
-                        onClick={() => handleOnActionClick("Cleaning")}
-                        className="border-2 border-black rounded-xl p-6 cursor-pointer hover:bg-black hover:text-white"
-                      >
-                        <MdOutlineCleaningServices size={50} />
-                      </div>
-                      <div
-                        onClick={() => handleOnActionClick("Announcement")}
-                        className="border-2 border-black rounded-xl p-6 cursor-pointer hover:bg-black hover:text-white"
-                      >
-                        <GrAnnounce size={50} />
-                      </div>
+                {isJanitorVerified ? (
+                  isStatusUpdating ? (
+                    <div className="flex justify-center items-center">
+                      <Loader2 className="mr-2 h-10 w-10 animate-spin" />
                     </div>
-                  </>
+                  ) : (
+                    <>
+                      <DialogHeader>
+                        <DialogTitle className="text-center">
+                          Choose an action
+                        </DialogTitle>
+                      </DialogHeader>
+                      <div className="mt-3 flex justify-center items-center gap-4">
+                        <div
+                          onClick={() => handleOnStatusChange("Cleaning")}
+                          className="border-2 border-black rounded-xl p-6 cursor-pointer hover:bg-black hover:text-white"
+                        >
+                          <MdOutlineCleaningServices size={50} />
+                        </div>
+                        <div
+                          onClick={() => handleOnStatusChange("Announcement")}
+                          className="border-2 border-black rounded-xl p-6 cursor-pointer hover:bg-black hover:text-white"
+                        >
+                          <GrAnnounce size={50} />
+                        </div>
+                      </div>
+                    </>
+                  )
                 ) : (
                   <>
                     <DialogHeader>
                       <DialogTitle className="text-center">
-                        Enter your access id
+                        Enter your access information
                       </DialogTitle>
                     </DialogHeader>
-                    <div className="mx-auto mt-4 flex flex-col gap-3">
-                      <InputOTP
-                        maxLength={6}
-                        value={accessId}
-                        onChange={(value) => setAccessId(value)}
-                      >
-                        <InputOTPGroup>
-                          <InputOTPSlot index={0} />
-                          <InputOTPSlot index={1} />
-                          <InputOTPSlot index={2} />
-                          <InputOTPSlot index={3} />
-                          <InputOTPSlot index={4} />
-                          <InputOTPSlot index={5} />
-                        </InputOTPGroup>
-                      </InputOTP>
-                      <Button disabled={isLoading} onClick={handleOnSubmit}>
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Please wait...
-                          </>
-                        ) : (
-                          <>Submit</>
-                        )}
-                      </Button>
-                    </div>
+                    <VerifyJanitorForm verifyJanitor={setIsJanitorVerified} />
                   </>
                 )}
               </DialogContent>
             </Dialog>
           </div>
-          <h1 className="grow text-4xl font-bold text-center">
-            Washroom Occupancy Status
+          <h1 className="grow text-4xl font-bold italic text-center">
+            Occupancy Status Screen
           </h1>
+          <div className="text-center text-2xl font-semibold underline">
+            {washroomData?.name}
+          </div>
           <div className="grow flex items-center justify-center">
             {renderIconBasedOnStatus(currStatus)}
           </div>
@@ -191,9 +194,9 @@ const Home = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
-                  className={`bg-transparent px-10 text-lg font-bold ${statusDropdownClasses[currStatus]} hover:text-white rounded-full border-2 focus-visible:ring-0 focus-visible:ring-offset-0`}
+                  className={`bg-transparent px-10 text-lg font-semibold ${statusDropdownClasses[currStatus]} hover:text-white rounded-full border-2 focus-visible:ring-0 focus-visible:ring-offset-0`}
                 >
-                  {currStatus}
+                  {washroomData?.status}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56">
@@ -201,20 +204,31 @@ const Home = () => {
                 <DropdownMenuSeparator />
                 <DropdownMenuRadioGroup
                   value={currStatus}
-                  onValueChange={handleOnActionClick}
+                  onValueChange={handleOnStatusChange}
                 >
                   <DropdownMenuRadioItem value={STATUS_CONSTANT.available}>
-                    {STATUS_CONSTANT.available}
+                    {currStatus === STATUS_CONSTANT.available
+                      ? STATUS_CONSTANT.available
+                      : "Cleaning Completed"}
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value={STATUS_CONSTANT.occupied}>
                     {STATUS_CONSTANT.occupied}
                   </DropdownMenuRadioItem>
+                  {isJanitorVerified && (
+                    <>
+                      <DropdownMenuRadioItem value={STATUS_CONSTANT.cleaning}>
+                        {STATUS_CONSTANT.cleaning} in Progress
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem
+                        value={STATUS_CONSTANT.announcement}
+                      >
+                        {STATUS_CONSTANT.announcement}
+                      </DropdownMenuRadioItem>
+                    </>
+                  )}
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
-          <div className="mt-4 mx-auto">
-            <p className="text-sm text-gray-500">Updated a few seconds ago</p>
           </div>
         </div>
       </div>
