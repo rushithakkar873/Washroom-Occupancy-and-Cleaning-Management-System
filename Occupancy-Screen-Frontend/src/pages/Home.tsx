@@ -207,9 +207,9 @@ const Home = () => {
                   onValueChange={handleOnStatusChange}
                 >
                   <DropdownMenuRadioItem value={STATUS_CONSTANT.available}>
-                    {currStatus === STATUS_CONSTANT.available
-                      ? STATUS_CONSTANT.available
-                      : "Cleaning Completed"}
+                    {currStatus === STATUS_CONSTANT.cleaning
+                      ? "Cleaning Completed"
+                      : STATUS_CONSTANT.available}
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value={STATUS_CONSTANT.occupied}>
                     {STATUS_CONSTANT.occupied}
