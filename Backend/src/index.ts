@@ -10,7 +10,7 @@ const { port } = config;
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "https://washroom-occupancy-and-cleaning-management-system.vercel.app"],
   })
 );
 app.use(express.json());
