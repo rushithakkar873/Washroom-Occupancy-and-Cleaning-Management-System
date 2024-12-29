@@ -16,7 +16,7 @@ const CustomPagination = ({ currentPage, totalPages, onPageChange }: PaginationP
         <PaginationItem>
           <PaginationPrevious onClick={goToPreviousPage} />
         </PaginationItem>
-        {[...Array(totalPages).keys()].map((pageNumber) => (
+        {[...Array(totalPages).keys()]?.map((pageNumber) => (
           <PaginationItem key={pageNumber}>
             <PaginationLink
               href="#"

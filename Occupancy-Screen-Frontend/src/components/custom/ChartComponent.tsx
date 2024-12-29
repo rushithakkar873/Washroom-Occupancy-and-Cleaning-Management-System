@@ -50,7 +50,7 @@ const ChartComponent = () => {
       };
 
       // Reduce the array to count by status and format for the chart
-      const statusCounts = washrooms.reduce(
+      const statusCounts = washrooms?.reduce(
         (
           acc: {
             [key: string]: { status: string; washrooms: number; fill: string };
@@ -85,7 +85,7 @@ const ChartComponent = () => {
   }, []);
 
   const totalVisitors = useMemo(() => {
-    return chartData.reduce((acc, curr) => acc + curr.washrooms, 0);
+    return chartData?.reduce((acc, curr) => acc + curr.washrooms, 0);
   }, [chartData]);
 
   return (

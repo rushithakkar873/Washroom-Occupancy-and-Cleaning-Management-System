@@ -91,7 +91,7 @@ const AdminWashroomList = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {currentItems.map((washroom, index) => (
+                {currentItems?.map((washroom, index) => (
                   <TableRow key={index} className="text-center">
                     <TableCell className="w-[200px]">
                       {startIndex + index + 1}
