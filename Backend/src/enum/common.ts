@@ -1,6 +1,7 @@
 export enum UserRole {
   Janitor = "Janitor",
   Admin = "Admin",
+  SuperAdmin = "SuperAdmin",
 }
 
 export enum WashroomStatus {

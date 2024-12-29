@@ -4,13 +4,17 @@ import config from "./config";
 import Routes from "./routes";
 import bodyParser from "body-parser";
 import cors from "cors";
+import { UserController } from "./controllers/UserController";
 
 const app: Express = express();
 const { port } = config;
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://washroom-occupancy-and-cleaning-management-system.vercel.app"],
+    origin: [
+      "http://localhost:5173",
+      "https://washroom-occupancy-and-cleaning-management-system.vercel.app",
+    ],
   })
 );
 app.use(express.json());
@@ -20,6 +24,7 @@ app.use(bodyParser.json());
 AppDataSource.initialize()
   .then(() => {
     console.log("Database connected");
+    UserController.createDefaultAdmin();
   })
   .catch((err) => {
     console.log(err);

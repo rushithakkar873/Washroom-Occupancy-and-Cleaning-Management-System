@@ -11,6 +11,37 @@ const { secret_key } = config;
 const userRepo: Repository<User> = AppDataSource.getRepository(User);
 
 export class UserController {
+  static createDefaultAdmin = async () => {
+    try {
+      const defaultAdminEmail = "admin@example.com";
+      const existingAdmin = await userRepo.findOne({
+        where: { email: defaultAdminEmail },
+      });
+
+      if (!existingAdmin) {
+        const hashedAccessId = await bcrypt.hash("123456", 10); // Use a secure method to generate and store this
+        const adminUser = userRepo.create({
+          name: "Super Admin",
+          email: defaultAdminEmail,
+          age: 50, // Set an appropriate default age
+          accessId: hashedAccessId,
+          role: UserRole.SuperAdmin,
+        });
+
+        const createdAdmin = await userRepo.save(adminUser);
+        if (createdAdmin) {
+          console.log("Default super admin created successfully.");
+        } else {
+          throw new Error("Failed to create default super admin.");
+        }
+      } else {
+        console.log("Default super admin already exists.");
+      }
+    } catch (error) {
+      console.error("Error creating default super admin:", error);
+    }
+  };
+
   static createUser = async (req: Request, res: Response) => {
     try {
       const { name, email, age, role } = req.body;
@@ -109,7 +140,7 @@ export class UserController {
       });
 
       if (janitors.length === 0) {
-        res.status(404).json({ message: "No janitors found" });
+        res.status(200).json({ message: "No janitors found" });
         return;
       }
 

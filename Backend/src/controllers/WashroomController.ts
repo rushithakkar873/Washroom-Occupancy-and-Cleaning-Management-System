@@ -50,7 +50,7 @@ export class WashroomController {
       const washrooms = await washroomRepo.find();
 
       if (washrooms.length === 0) {
-        res.status(404).json({ message: "No washrooms found" });
+        res.status(200).json({ message: "No washrooms found" });
         return;
       }
 
@@ -71,7 +71,7 @@ export class WashroomController {
       });
 
       if (!washroom) {
-        res.status(404).json({ message: "Washroom not found" });
+        res.status(200).json({ message: "Washroom not found" });
         return;
       }
 
@@ -98,7 +98,7 @@ export class WashroomController {
       });
 
       if (!washroom) {
-        res.status(404).json({ message: "Washroom not found" });
+        res.status(200).json({ message: "Washroom not found" });
         return;
       }
 
